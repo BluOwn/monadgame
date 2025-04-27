@@ -17,12 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let signer = null;
     let userAddress = null;
     let contract = null;
-    let web3Modal = null;
 
     // Smart contract details
     const contractAddress = '0x12b80421b226646eA44628F1cd7795E3247F9b33'; // Replace with your deployed contract address
     const creatorAddress = '0x0b977acab5d9b8f654f48090955f5e00973be0fe'; // Replace with your MetaMask address
-    const contractABI =     [
+    const contractABI = [
         {
             "inputs": [],
             "stateMutability": "nonpayable",
@@ -471,38 +470,16 @@ document.addEventListener('DOMContentLoaded', () => {
     contractAddressElement.textContent = contractAddress;
     creatorAddressElement.textContent = creatorAddress;
 
-    // Initialize Web3Modal
-    const providerOptions = {
-        walletconnect: {
-            package: window.WalletConnectProvider, // Use WalletConnectProvider directly
-            options: {
-                rpc: {
-                    10143: 'https://testnet-rpc.monad.xyz', // Monad Testnet RPC
-                },
-                chainId: 10143, // Monad Testnet Chain ID
-            },
-        },
-        injected: {
-            display: {
-                name: 'Injected',
-                description: 'Connect with the provider in your Browser',
-            },
-            package: null,
-        },
-    };
-
-    try {
-        web3Modal = new window.Web3Modal({
-            cacheProvider: false,
-            providerOptions,
-            theme: 'dark',
-        });
-    } catch (error) {
-        console.error('Failed to initialize Web3Modal:', error);
-        disconnectMessage.textContent = 'Failed to initialize wallet connection. Please refresh and try again.';
-        disconnectMessage.classList.remove('hidden');
+    // Check if MetaMask is installed
+    if (!window.ethereum) {
+        alert('Please install MetaMask to play this game!');
+        connectButton.disabled = true;
         return;
     }
+
+    // Initialize provider
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    contract = new ethers.Contract(contractAddress, contractABI, provider);
 
     // Function to update mint count, balance, and total minted supply
     async function updateUserInfo() {
@@ -525,52 +502,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Connect to wallet
+    // Connect to MetaMask
     connectButton.addEventListener('click', async () => {
         try {
-            // Connect using Web3Modal
-            const web3Provider = await web3Modal.connect();
-            provider = new ethers.providers.Web3Provider(web3Provider);
+            // Request accounts from MetaMask
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             signer = provider.getSigner();
-            userAddress = await signer.getAddress();
+            userAddress = accounts[0];
             walletAddress.textContent = userAddress;
             walletInfo.classList.remove('hidden');
             connectButton.style.display = 'none';
             gameResult.classList.add('hidden');
             disconnectMessage.classList.add('hidden');
-
-            // Initialize contract
-            contract = new ethers.Contract(contractAddress, contractABI, provider).connect(signer);
-
+            // Update contract with signer
+            contract = contract.connect(signer);
             // Update mint count, balance, and supply
             await updateUserInfo();
         } catch (error) {
-            console.error('Failed to connect to wallet:', error);
-            disconnectMessage.textContent = 'Failed to connect to wallet. Please try again.';
-            disconnectMessage.classList.remove('hidden');
+            console.error('Failed to connect to MetaMask:', error);
+            alert('Failed to connect to MetaMask. Please try again.');
         }
     });
 
     // Copy contract address
     copyButton.addEventListener('click', () => {
         navigator.clipboard.writeText(contractAddress).then(() => {
-            disconnectMessage.textContent = 'Contract address copied to clipboard!';
-            disconnectMessage.classList.remove('hidden');
-            setTimeout(() => {
-                disconnectMessage.classList.add('hidden');
-            }, 2000);
+            alert('Contract address copied to clipboard!');
         }).catch((error) => {
             console.error('Failed to copy contract address:', error);
-            disconnectMessage.textContent = 'Failed to copy contract address. Please try again.';
-            disconnectMessage.classList.remove('hidden');
+            alert('Failed to copy contract address. Please try again.');
         });
     });
 
     // Play game: Generate random number (1-10) and mint tokens
     playButton.addEventListener('click', async () => {
         if (!signer || !userAddress || !contract) {
-            disconnectMessage.textContent = 'Please connect your wallet first!';
-            disconnectMessage.classList.remove('hidden');
+            alert('Please connect your wallet first!');
             return;
         }
 
@@ -590,15 +557,40 @@ document.addEventListener('DOMContentLoaded', () => {
             await updateUserInfo();
         } catch (error) {
             console.error('Game error:', error);
-            disconnectMessage.textContent = `Failed to play the game: ${error.reason || error.message}`;
-            disconnectMessage.classList.remove('hidden');
+            alert(`Failed to play the game: ${error.reason || error.message}`);
         }
     });
 
     // Disconnect wallet and refresh page
-    disconnectButton.addEventListener('click', async () => {
-        try {
-            await web3Modal.clearCachedProvider();
+    disconnectButton.addEventListener('click', () => {
+        provider = null;
+        signer = null;
+        userAddress = null;
+        contract = null;
+        walletInfo.classList.add('hidden');
+        connectButton.style.display = 'block';
+        gameResult.classList.add('hidden');
+        walletAddress.textContent = '';
+        dailyMints.textContent = '0';
+        mintProgress.value = '0';
+        gmtBalance.textContent = '0';
+        disconnectMessage.classList.remove('hidden');
+        setTimeout(() => window.location.reload(), 1000); // Refresh after 1 second
+    });
+
+    // Handle account or network change
+    window.ethereum?.on('accountsChanged', async (accounts) => {
+        if (accounts.length > 0) {
+            userAddress = accounts[0];
+            walletAddress.textContent = userAddress;
+            signer = provider.getSigner();
+            contract = contract.connect(signer);
+            walletInfo.classList.remove('hidden');
+            connectButton.style.display = 'none';
+            gameResult.classList.add('hidden');
+            disconnectMessage.classList.add('hidden');
+            await updateUserInfo();
+        } else {
             provider = null;
             signer = null;
             userAddress = null;
@@ -610,53 +602,14 @@ document.addEventListener('DOMContentLoaded', () => {
             dailyMints.textContent = '0';
             mintProgress.value = '0';
             gmtBalance.textContent = '0';
-            disconnectMessage.classList.remove('hidden');
-            setTimeout(() => window.location.reload(), 1000); // Refresh after 1 second
-        } catch (error) {
-            console.error('Failed to disconnect:', error);
+            disconnectMessage.classList.add('hidden');
         }
     });
 
-    // Handle account or network change
-    if (window.ethereum || window.web3) {
-        const web3Provider = window.ethereum || window.web3.currentProvider;
-        web3Provider.on('accountsChanged', async (accounts) => {
-            if (accounts.length > 0) {
-                userAddress = accounts[0];
-                walletAddress.textContent = userAddress;
-                signer = provider.getSigner();
-                contract = contract.connect(signer);
-                walletInfo.classList.remove('hidden');
-                connectButton.style.display = 'none';
-                gameResult.classList.add('hidden');
-                disconnectMessage.classList.add('hidden');
-                await updateUserInfo();
-            } else {
-                provider = null;
-                signer = null;
-                userAddress = null;
-                contract = null;
-                walletInfo.classList.add('hidden');
-                connectButton.style.display = 'block';
-                gameResult.classList.add('hidden');
-                walletAddress.textContent = '';
-                dailyMints.textContent = '0';
-                mintProgress.value = '0';
-                gmtBalance.textContent = '0';
-                disconnectMessage.classList.add('hidden');
-            }
-        });
-
-        web3Provider.on('chainChanged', async () => {
-            provider = new ethers.providers.Web3Provider(web3Provider);
-            contract = new ethers.Contract(contractAddress, contractABI, provider);
-            if (userAddress) {
-                signer = provider.getSigner();
-                contract = contract.connect(signer);
-                await updateUserInfo();
-            }
-        });
-    }
+    // Handle network change
+    window.ethereum?.on('chainChanged', () => {
+        window.location.reload();
+    });
 
     // Initial update of minted supply (for non-connected users)
     updateUserInfo();
