@@ -65,7 +65,7 @@ button:hover {
     font-weight: bold;
 }
 
-#disconnectMessage, #networkMessage {
+#disconnectMessage {
     margin-top: 20px;
     color: #dc3545;
     font-weight: bold;
