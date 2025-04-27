@@ -1,1 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decentralized Chat</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #0e100f;
+            color: white;
+        }
+        .chat-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: rgba(53,0,129,.5);
+            border-radius: 10px;
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .header a:hover {
+            color: white;
+        }
+        .message {
+            background-color: rgba(255,255,255,0.1);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .message .sender {
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .message .timestamp {
+            font-size: 0.8em;
+            color: rgba(255,255,255,0.6);
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+        .input-area textarea {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            resize: none;
+        }
+        .input-area button, .wallet-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(53,0,129,.5);
+            color: white;
+            cursor: pointer;
+        }
+        .input-area button:hover, .wallet-buttons button:hover {
+            background-color: rgba(53,0,129,0.7);
+        }
+        .input-area button:disabled, .wallet-buttons button:disabled {
+            background-color: rgba(53,0,129,0.3);
+            cursor: not-allowed;
+        }
+        .error {
+            color: #ff5555;
+            font-size: 0.9em;
+            margin: 10px 0;
+        }
+        .wallet-buttons {
+            margin-bottom: 10px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: rgba(255,255,255,0.6);
+        }
+        .footer a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+        }
+        .footer a:hover {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
+        const App = () => {
+            const [provider, setProvider] = useState(null);
+            const [contract, setContract] = useState(null);
+            const [messages, setMessages] = useState([]);
+            const [newMessage, setNewMessage] = useState('');
+            const [userAddress, setUserAddress] = useState('');
+            const [remainingMessages, setRemainingMessages] = useState(5);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+
+            const contractAddress = '0x70f5abC871395697E4C600b7dF6F9E7aBFe1ed42'; // Replace with your deployed contract address
+            const contractABI = [
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "content",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
+			}
+		],
+		"name": "MessagePosted",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_content",
+				"type": "string"
+			}
+		],
+		"name": "postMessage",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getLastMessages",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "address",
+						"name": "sender",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "content",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct MessageBoard.Message[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			}
+		],
+		"name": "getRemainingMessages",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+            useEffect(() => {
+                // Load messages on page load, even if wallet is not connected
+                const loadMessages = async () => {
+                    try {
+                        const provider = new ethers.providers.JsonRpcProvider('https://testnet-rpc.monad.xyz');
+                        const contract = new ethers.Contract(contractAddress, contractABI, provider);
+                        const messages = await contract.getLastMessages();
+                        setMessages([...messages].reverse()); // Create a copy and reverse
+                    } catch (err) {
+                        setError('Failed to load messages: ' + err.message);
+                    }
+                };
+                loadMessages();
+            }, []);
+
+            const connectWallet = async () => {
+                try {
+                    if (!window.ethereum) {
+                        throw new Error('MetaMask is not installed');
+                    }
+                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    await provider.send('eth_requestAccounts', []);
+                    const signer = provider.getSigner();
+                    const address = await signer.getAddress();
+                    const contract = new ethers.Contract(contractAddress, contractABI, signer);
+
+                    setProvider(provider);
+                    setContract(contract);
+                    setUserAddress(address);
+
+                    const remaining = await contract.getRemainingMessages(address);
+                    setRemainingMessages(Number(remaining));
+                    setError('');
+                } catch (err) {
+                    setError('Failed to connect wallet: ' + err.message);
+                }
+            };
+
+            const disconnectWallet = () => {
+                setProvider(null);
+                setContract(null);
+                setUserAddress('');
+                setRemainingMessages(5);
+                setNewMessage('');
+                setError('');
+            };
+
+            const postMessage = async () => {
+                if (!contract || !newMessage) return;
+                setLoading(true);
+                setError('');
+                try {
+                    const tx = await contract.postMessage(newMessage);
+                    await tx.wait();
+                    setNewMessage('');
+                    const messages = await contract.getLastMessages();
+                    setMessages([...messages].reverse()); // Create a copy and reverse
+                    const remaining = await contract.getRemainingMessages(userAddress);
+                    setRemainingMessages(Number(remaining));
+                } catch (err) {
+                    setError('Error posting message: ' + err.message);
+                }
+                setLoading(false);
+            };
+
+            return (
+                <div className="chat-container">
+                    <div>
+                        <div className="header">
+                            <a href="https://monadgame-nine.vercel.app/" target="_blank" rel="noopener noreferrer">
+                                Play Game
+                            </a>
+                        </div>
+                        <div className="wallet-buttons">
+                            {!userAddress ? (
+                                <button onClick={connectWallet}>Connect Wallet</button>
+                            ) : (
+                                <button onClick={disconnectWallet}>Disconnect</button>
+                            )}
+                        </div>
+                        {error && <p className="error">{error}</p>}
+                        {userAddress && (
+                            <p>Connected: {userAddress.slice(0, 6)}...{userAddress.slice(-4)}</p>
+                        )}
+                        <div>
+                            {messages.length > 0 ? (
+                                messages.map((msg, index) => (
+                                    <div key={index} className="message">
+                                        <p className="sender">{msg.sender.slice(0, 6)}...{msg.sender.slice(-4)}</p>
+                                        <p>{msg.content}</p>
+                                        <p className="timestamp">
+                                            {new Date(Number(msg.timestamp) * 1000).toLocaleTimeString()}
+                                        </p>
+                                    </div>
+                                ))
+                            ) : (
+                                <p>No messages yet.</p>
+                            )}
+                        </div>
+                    </div>
+                    {userAddress && (
+                        <div className="input-area">
+                            <textarea
+                                value={newMessage}
+                                onChange={(e) => setNewMessage(e.target.value)}
+                                placeholder={`Enter message (max 100 chars, ${remainingMessages} left today)`}
+                                maxLength="100"
+                            />
+                            <button
+                                onClick={postMessage}
+                                disabled={loading || remainingMessages === 0}
+                            >
+                                {loading ? 'Sending...' : 'Send'}
+                            </button>
+                        </div>
+                    )}
+                    <div className="footer">
+                        <p>Created by: <a href="https://testnet.monadexplorer.com/address/0xYOUR_CREATOR_ADDRESS" target="_blank" rel="noopener noreferrer">0xYOUR_CREATOR_ADDRESS</a></p>
+                        <p>Twitter: <a href="https://twitter.com/YourTwitterHandle" target="_blank" rel="noopener noreferrer">@YourTwitterHandle</a></p>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
