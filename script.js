@@ -473,9 +473,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Web3Modal
     const providerOptions = {
-        // Add more provider options if needed
+        walletconnect: {
+            package: window.WalletConnectProvider.default,
+            options: {
+                rpc: {
+                    10143: 'https://testnet-rpc.monad.xyz', // Monad Testnet RPC
+                },
+                chainId: 10143, // Monad Testnet Chain ID
+            },
+        },
+        injected: {
+            display: {
+                name: 'Injected',
+                description: 'Connect with the provider in your Browser',
+            },
+            package: null,
+        },
     };
-    web3Modal = new Web3Modal({
+
+    web3Modal = new window.Web3Modal.default({
         cacheProvider: false,
         providerOptions,
         theme: 'dark',
