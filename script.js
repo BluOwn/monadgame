@@ -492,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     try {
-        web3Modal = new window.Web3Modal.default({
+        web3Modal = new window.Web3Modal({
             cacheProvider: false,
             providerOptions,
             theme: 'dark',
