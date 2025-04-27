@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <h1>Blockchain Game with Monad Testnet</h1>
-        <button id="connectButton">Connect MetaMask</button>
+        <button id="connectButton">Connect Wallet</button>
         <div id="walletInfo" class="hidden">
             <p>Wallet Address: <span id="walletAddress"></span></p>
             <p>Daily Mints: <progress id="mintProgress" max="20" value="0"></progress> <span id="dailyMints">0</span>/20</p>
@@ -27,6 +27,7 @@
         <p>Created by: <span id="creatorAddress">YOUR_CREATOR_ADDRESS</span></p>
     </footer>
     <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://unpkg.com/@web3modal/ethers@3.5.4/dist/index.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
