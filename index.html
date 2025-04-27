@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monad Blockchain Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Blockchain Game with Monad Testnet</h1>
+        <button id="connectButton">Connect MetaMask</button>
+        <div id="walletInfo" class="hidden">
+            <p>Wallet Address: <span id="walletAddress"></span></p>
+            <p>Daily Mints: <progress id="mintProgress" max="20" value="0"></progress> <span id="dailyMints">0</span>/20</p>
+            <p>GMT Balance: <span id="gmtBalance">0</span> GMT</p>
+            <p>Total Minted Supply: <span id="mintedSupply">0</span> GMT</p>
+            <button id="copyButton">Copy Contract Address</button>
+            <button id="playButton">Play</button>
+            <button id="disconnectButton">Disconnect</button>
+            <p id="gameResult" class="hidden"></p>
+            <p id="disconnectMessage" class="hidden">Wallet disconnected. Refreshing...</p>
+        </div>
+    </div>
+    <footer>
+        <p>Contract Address: <span id="contractAddress">YOUR_CONTRACT_ADDRESS</span></p>
+        <p>Created by: <span id="creatorAddress">YOUR_CREATOR_ADDRESS</span></p>
+    </footer>
+    <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
