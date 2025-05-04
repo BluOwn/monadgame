@@ -17,8 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let signer = null;
     let userAddress = null;
     let contract = null;
-    let lastMintAmount = 0;
-
     // Smart contract details
     const contractAddress = '0x12b80421b226646eA44628F1cd7795E3247F9b33'; // Replace with your deployed contract address
     const creatorAddress = '0x0b977acab5d9b8f654f48090955f5e00973be0fe'; // Replace with your MetaMask address
@@ -645,10 +643,6 @@ document.addEventListener('DOMContentLoaded', () => {
             gameResult.classList.add('hidden');
             disconnectMessage.classList.add('hidden');
             
-            // Show achievements and stats buttons
-            document.getElementById('achievementsButton').classList.remove('hidden');
-            document.getElementById('statsButton').classList.remove('hidden');
-            
             // Initialize game stats
             GameStats.initialize(userAddress);
             
@@ -754,8 +748,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyMints.textContent = '0';
         mintProgress.value = '0';
         gmtBalance.textContent = '0';
-        document.getElementById('achievementsButton').classList.add('hidden');
-        document.getElementById('statsButton').classList.add('hidden');
         disconnectMessage.classList.remove('hidden');
         setTimeout(() => window.location.reload(), 1000); // Refresh after 1 second
     });
@@ -781,10 +773,6 @@ document.addEventListener('DOMContentLoaded', () => {
             connectButton.style.display = 'none';
             gameResult.classList.add('hidden');
             disconnectMessage.classList.add('hidden');
-            // Initialize game stats for new account
-            GameStats.initialize(userAddress);
-            document.getElementById('achievementsButton').classList.remove('hidden');
-            document.getElementById('statsButton').classList.remove('hidden');
             await updateUserInfo();
         } else {
             provider = null;
@@ -798,8 +786,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dailyMints.textContent = '0';
             mintProgress.value = '0';
             gmtBalance.textContent = '0';
-            document.getElementById('achievementsButton').classList.add('hidden');
-            document.getElementById('statsButton').classList.add('hidden');
             disconnectMessage.classList.add('hidden');
         }
     });
