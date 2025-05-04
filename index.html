@@ -3,44 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blockchain Game</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <meta name="description" content="Blockchain Game with Monad Testnet - Mint GMT tokens and play to win!">
+    <title>Monad Game - Blockchain Gaming Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <div style="text-align: center;">
-            <h1>
-                <a href="https://monadgame-nine.vercel.app/messages/index.html" class="chat-button" target="_blank">Chat</a>
-                <a href="https://monad-blockchain-email-app.vercel.app/" class="chat-button" target="_blank">📧 Email</a>
-            </h1>
-            <h1>Blockchain Game with Monad Testnet</h1>
-        </div>
+        <header>
+            <h1>Monad Blockchain Game</h1>
+            <div class="navigation-links">
+                <a href="https://monadgame-nine.vercel.app/messages/index.html" class="chat-button" target="_blank">
+                    <i class="fas fa-comments"></i> Chat
+                </a>
+                <a href="https://monad-blockchain-email-app.vercel.app/" class="chat-button" target="_blank">
+                    <i class="fas fa-envelope"></i> Email
+                </a>
+            </div>
+        </header>
 
-        <button id="connectButton">Connect MetaMask</button>
+        <button id="connectButton" class="pulse-button">
+            <i class="fas fa-wallet"></i> Connect MetaMask
+        </button>
         
         <div id="walletInfo" class="hidden">
-            <p>Wallet Address: <span id="walletAddress"></span></p>
-            <p>Daily Mints: <progress id="mintProgress" max="20" value="0"></progress> <span id="dailyMints">0</span>/20</p>
-            <p>GMT Balance: <span id="gmtBalance">0</span> GMT</p>
-            <p>Total Minted Supply: <span id="mintedSupply">0</span> GMT</p>
+            <div class="info-card wallet-card">
+                <h3><i class="fas fa-user-circle"></i> Your Wallet</h3>
+                <p><span class="label">Address:</span> <span id="walletAddress"></span></p>
+            </div>
+            
+            <div class="info-card stats-card">
+                <h3><i class="fas fa-chart-line"></i> Your Stats</h3>
+                <p>
+                    <span class="label">Daily Mints:</span> 
+                    <span class="progress-container">
+                        <progress id="mintProgress" max="20" value="0"></progress>
+                        <span id="dailyMints">0</span>/20
+                    </span>
+                </p>
+                <p><span class="label">GMT Balance:</span> <span id="gmtBalance">0</span> GMT</p>
+                <p><span class="label">Total Minted:</span> <span id="mintedSupply">0</span> GMT</p>
+            </div>
             
             <div class="button-group">
-                <button id="copyButton">Copy Contract Address</button>
-                <button id="playButton">Spin to Win!</button>
-                <button id="disconnectButton">Disconnect</button>
+                <button id="playButton" class="primary-button">
+                    <i class="fas fa-dice"></i> Spin to Win!
+                </button>
+                <button id="copyButton">
+                    <i class="fas fa-copy"></i> Copy Contract Address
+                </button>
+                <button id="disconnectButton" class="secondary-button">
+                    <i class="fas fa-sign-out-alt"></i> Disconnect
+                </button>
             </div>
             
             <p id="gameResult" class="hidden"></p>
             <p id="disconnectMessage" class="hidden">Wallet Connected</p>
         </div>
         
+        <!-- Game Instructions Card -->
+        <div class="instructions-card">
+            <h3><i class="fas fa-info-circle"></i> How to Play</h3>
+            <ol>
+                <li>Connect your MetaMask wallet</li>
+                <li>Click "Spin to Win" to mint GMT tokens</li>
+                <li>Get between 1-10 GMT tokens randomly</li>
+                <li>You can mint up to 20 times per day</li>
+            </ol>
+        </div>
+        
         <!-- Toast Notification -->
-        <div id="toast" class="toast">Message copied!</div>
+        <div id="toast" class="toast"><i class="fas fa-check-circle"></i> <span id="toastMessage">Message copied!</span></div>
     </div>
+    
     <footer>
-        <p>Contract Address: <span id="contractAddress">YOUR_CONTRACT_ADDRESS</span></p>
-        <p>Created by: <span id="creatorAddress">YOUR_CREATOR_ADDRESS</span></p>
+        <div class="footer-content">
+            <p><i class="fas fa-file-contract"></i> Contract: <span id="contractAddress">YOUR_CONTRACT_ADDRESS</span></p>
+            <p><i class="fas fa-code-branch"></i> Created by: <span id="creatorAddress">YOUR_CREATOR_ADDRESS</span></p>
+        </div>
     </footer>
     
     <script src="sounds.js"></script>
