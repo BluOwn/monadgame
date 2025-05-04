@@ -9,14 +9,17 @@
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
+        /* Base styles */
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #0e100f;
             color: white;
         }
+        
+        /* Container styles */
         .chat-container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 20px auto;
             padding: 20px;
             background-color: rgba(53,0,129,.5);
@@ -25,227 +28,534 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+        
+        /* Header styles */
         .header {
             text-align: center;
             margin-bottom: 20px;
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
         }
+        
         .header a {
             color: rgba(255,255,255,0.8);
             text-decoration: none;
             font-weight: bold;
+            transition: color 0.3s ease;
         }
+        
         .header a:hover {
             color: white;
+            text-decoration: underline;
         }
+        
+        /* Message styles */
+        .messages-container {
+            overflow-y: auto;
+            max-height: 60vh;
+            margin-bottom: 20px;
+        }
+        
         .message {
             background-color: rgba(255,255,255,0.1);
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
         }
+        
+        .message:hover {
+            background-color: rgba(255,255,255,0.15);
+        }
+        
         .message .sender {
             font-weight: bold;
             font-size: 0.9em;
+            margin-bottom: 4px;
         }
+        
+        .message .content {
+            word-break: break-word;
+        }
+        
         .message .timestamp {
             font-size: 0.8em;
             color: rgba(255,255,255,0.6);
+            text-align: right;
+            margin-top: 4px;
         }
+        
+        /* Input area styles */
         .input-area {
             display: flex;
             gap: 10px;
+            margin-top: 10px;
         }
+        
         .input-area textarea {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             border: none;
             border-radius: 5px;
             background-color: rgba(255,255,255,0.1);
             color: white;
             resize: none;
+            transition: background-color 0.3s ease;
         }
-        .input-area button, .wallet-buttons button {
+        
+        .input-area textarea:focus {
+            outline: none;
+            background-color: rgba(255,255,255,0.15);
+        }
+        
+        /* Button styles */
+        button {
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
-            background-color: rgba(53,0,129,.5);
+            background-color: rgba(53,0,129,.7);
             color: white;
             cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
         }
-        .input-area button:hover, .wallet-buttons button:hover {
-            background-color: rgba(53,0,129,0.7);
+        
+        button:hover {
+            background-color: rgba(53,0,129,0.9);
         }
-        .input-area button:disabled, .wallet-buttons button:disabled {
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        button:disabled {
             background-color: rgba(53,0,129,0.3);
             cursor: not-allowed;
         }
+        
+        /* Error and notification styles */
         .error {
             color: #ff5555;
             font-size: 0.9em;
             margin: 10px 0;
+            padding: 8px;
+            background-color: rgba(255,85,85,0.1);
+            border-radius: 5px;
         }
-        .wallet-buttons {
-            margin-bottom: 10px;
+        
+        .notification {
+            color: #55ff7f;
+            font-size: 0.9em;
+            margin: 10px 0;
+            padding: 8px;
+            background-color: rgba(85,255,127,0.1);
+            border-radius: 5px;
+            transition: opacity 1s ease;
         }
+        
+        .fade-out {
+            opacity: 0;
+        }
+        
+        /* Wallet info styles */
+        .wallet-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
+        .wallet-address {
+            font-family: monospace;
+            background-color: rgba(255,255,255,0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .remaining-count {
+            font-weight: bold;
+            color: #55ff7f;
+        }
+        
+        /* Loading indicator */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Footer styles */
         .footer {
             text-align: center;
             margin-top: 20px;
+            padding-top: 10px;
             font-size: 0.9em;
             color: rgba(255,255,255,0.6);
+            border-top: 1px solid rgba(255,255,255,0.2);
         }
+        
         .footer a {
             color: rgba(255,255,255,0.8);
             text-decoration: none;
+            transition: color 0.3s ease;
         }
+        
         .footer a:hover {
             color: white;
+            text-decoration: underline;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .chat-container {
+                margin: 10px;
+                padding: 15px;
+                min-height: 90vh;
+            }
+            
+            .input-area {
+                flex-direction: column;
+            }
+            
+            .input-area textarea {
+                min-height: 80px;
+            }
         }
     </style>
 </head>
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef, useCallback } = React;
 
+        // Contract configuration
+        const CONTRACT_CONFIG = {
+            address: '0x70f5abC871395697E4C600b7dF6F9E7aBFe1ed42',
+            abi: [
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "address",
+                            "name": "sender",
+                            "type": "address"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "content",
+                            "type": "string"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "timestamp",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "MessagePosted",
+                    "type": "event"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "string",
+                            "name": "_content",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "postMessage",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "getLastMessages",
+                    "outputs": [
+                        {
+                            "components": [
+                                {
+                                    "internalType": "address",
+                                    "name": "sender",
+                                    "type": "address"
+                                },
+                                {
+                                    "internalType": "string",
+                                    "name": "content",
+                                    "type": "string"
+                                },
+                                {
+                                    "internalType": "uint256",
+                                    "name": "timestamp",
+                                    "type": "uint256"
+                                }
+                            ],
+                            "internalType": "struct MessageBoard.Message[]",
+                            "name": "",
+                            "type": "tuple[]"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "_user",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "getRemainingMessages",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                }
+            ],
+            rpcUrl: 'https://testnet-rpc.monad.xyz'
+        };
+
+        // Format timestamp to a human-readable format
+        const formatTimestamp = (timestamp) => {
+            const date = new Date(timestamp * 1000);
+            const now = new Date();
+            
+            // If the message is from today, show only the time
+            if (date.toDateString() === now.toDateString()) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            // Otherwise show the date and time
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        };
+
+        // Format wallet address for display
+        const formatAddress = (address) => {
+            if (!address) return '';
+            return `${address.slice(0, 6)}...${address.slice(-4)}`;
+        };
+
+        // Message component
+        const Message = ({ message }) => {
+            return (
+                <div className="message">
+                    <div className="sender">{formatAddress(message.sender)}</div>
+                    <div className="content">{message.content}</div>
+                    <div className="timestamp">{formatTimestamp(Number(message.timestamp))}</div>
+                </div>
+            );
+        };
+
+        // Message list component
+        const MessageList = ({ messages, loading }) => {
+            const messagesEndRef = useRef(null);
+            
+            // Scroll to bottom effect
+            useEffect(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, [messages]);
+            
+            return (
+                <div className="messages-container">
+                    {loading ? (
+                        <div style={{ textAlign: 'center', padding: '20px' }}>
+                            <div className="loading"></div>
+                            <p>Loading messages...</p>
+                        </div>
+                    ) : messages.length > 0 ? (
+                        <>
+                            {messages.map((msg, index) => (
+                                <Message key={`${msg.sender}-${msg.timestamp}-${index}`} message={msg} />
+                            ))}
+                            <div ref={messagesEndRef} />
+                        </>
+                    ) : (
+                        <p style={{ textAlign: 'center' }}>No messages yet. Be the first to post!</p>
+                    )}
+                </div>
+            );
+        };
+
+        // Wallet connection component
+        const WalletConnection = ({ userAddress, connectWallet, disconnectWallet }) => {
+            return (
+                <div className="wallet-buttons">
+                    {!userAddress ? (
+                        <button onClick={connectWallet}>Connect Wallet</button>
+                    ) : (
+                        <button onClick={disconnectWallet}>Disconnect</button>
+                    )}
+                </div>
+            );
+        };
+
+        // Message input component
+        const MessageInput = ({ userAddress, remainingMessages, newMessage, setNewMessage, postMessage, loading }) => {
+            const handleKeyDown = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    postMessage();
+                }
+            };
+            
+            return (
+                <div className="input-area">
+                    <textarea
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder={userAddress 
+                            ? `Enter message (max 100 chars, ${remainingMessages} left today). Press Enter to send.` 
+                            : 'Connect wallet to chat'
+                        }
+                        maxLength="100"
+                        disabled={!userAddress || remainingMessages === 0}
+                    />
+                    <button
+                        onClick={postMessage}
+                        disabled={loading || !userAddress || remainingMessages === 0 || !newMessage.trim()}
+                    >
+                        {loading ? 'Sending...' : 'Send'}
+                    </button>
+                </div>
+            );
+        };
+
+        // Main app component
         const App = () => {
             const [provider, setProvider] = useState(null);
             const [contract, setContract] = useState(null);
+            const [readOnlyContract, setReadOnlyContract] = useState(null);
             const [messages, setMessages] = useState([]);
             const [newMessage, setNewMessage] = useState('');
             const [userAddress, setUserAddress] = useState('');
             const [remainingMessages, setRemainingMessages] = useState(5);
             const [loading, setLoading] = useState(false);
+            const [fetchingMessages, setFetchingMessages] = useState(true);
             const [error, setError] = useState('');
+            const [notification, setNotification] = useState('');
+            const messagePostedListener = useRef(null);
 
-            const contractAddress = '0x70f5abC871395697E4C600b7dF6F9E7aBFe1ed42'; // Replace with your deployed contract address
-            const contractABI = [
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "sender",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "content",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "timestamp",
-				"type": "uint256"
-			}
-		],
-		"name": "MessagePosted",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "_content",
-				"type": "string"
-			}
-		],
-		"name": "postMessage",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getLastMessages",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "address",
-						"name": "sender",
-						"type": "address"
-					},
-					{
-						"internalType": "string",
-						"name": "content",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "timestamp",
-						"type": "uint256"
-					}
-				],
-				"internalType": "struct MessageBoard.Message[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_user",
-				"type": "address"
-			}
-		],
-		"name": "getRemainingMessages",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	}
-];
+            // Initialize read-only contract for public data access
             useEffect(() => {
-                // Load messages on page load, even if wallet is not connected
-                const loadMessages = async () => {
-                    try {
-                        const provider = new ethers.providers.JsonRpcProvider('https://testnet-rpc.monad.xyz');
-                        const contract = new ethers.Contract(contractAddress, contractABI, provider);
-                        const messages = await contract.getLastMessages();
-                        setMessages([...messages].reverse()); // Create a copy and reverse
-                    } catch (err) {
-                        setError('Failed to load messages: ' + err.message);
-                    }
-                };
-                loadMessages();
+                try {
+                    const provider = new ethers.providers.JsonRpcProvider(CONTRACT_CONFIG.rpcUrl);
+                    const contract = new ethers.Contract(CONTRACT_CONFIG.address, CONTRACT_CONFIG.abi, provider);
+                    setReadOnlyContract(contract);
+                } catch (err) {
+                    console.error('Failed to initialize read-only contract:', err);
+                    setError('Failed to initialize connection. Please refresh the page.');
+                }
             }, []);
 
+            // Load messages on page load
+            useEffect(() => {
+                if (readOnlyContract) {
+                    loadMessages();
+                }
+            }, [readOnlyContract]);
+
+            // Set up event listener for new messages
+            useEffect(() => {
+                if (contract) {
+                    // Remove any existing listeners
+                    if (messagePostedListener.current) {
+                        contract.off("MessagePosted", messagePostedListener.current);
+                    }
+                    
+                    // Set up new listener
+                    messagePostedListener.current = (sender, content, timestamp) => {
+                        const newMsg = { sender, content, timestamp };
+                        setMessages(prevMsgs => [newMsg, ...prevMsgs]);
+                    };
+                    
+                    contract.on("MessagePosted", messagePostedListener.current);
+                    
+                    // Cleanup listener on unmount
+                    return () => {
+                        if (messagePostedListener.current) {
+                            contract.off("MessagePosted", messagePostedListener.current);
+                        }
+                    };
+                }
+            }, [contract]);
+
+            // Auto-hide notifications after 5 seconds
+            useEffect(() => {
+                if (notification) {
+                    const timer = setTimeout(() => {
+                        setNotification('');
+                    }, 5000);
+                    return () => clearTimeout(timer);
+                }
+            }, [notification]);
+
+            // Load messages function with retry logic
+            const loadMessages = async (retryCount = 0) => {
+                if (!readOnlyContract) return;
+                
+                setFetchingMessages(true);
+                try {
+                    const messages = await readOnlyContract.getLastMessages();
+                    setMessages([...messages].reverse()); // Create a copy and reverse
+                    setError('');
+                } catch (err) {
+                    console.error('Failed to load messages:', err);
+                    if (retryCount < 3) {
+                        // Exponential backoff retry
+                        setTimeout(() => loadMessages(retryCount + 1), 1000 * Math.pow(2, retryCount));
+                    } else {
+                        setError('Failed to load messages. Please refresh the page.');
+                    }
+                } finally {
+                    setFetchingMessages(false);
+                }
+            };
+
+            // Connect wallet function
             const connectWallet = async () => {
+                setError('');
                 try {
                     if (!window.ethereum) {
-                        throw new Error('MetaMask is not installed');
+                        throw new Error('MetaMask is not installed. Please install MetaMask to use this app.');
                     }
+                    
                     const provider = new ethers.providers.Web3Provider(window.ethereum);
                     await provider.send('eth_requestAccounts', []);
                     const signer = provider.getSigner();
                     const address = await signer.getAddress();
-                    const contract = new ethers.Contract(contractAddress, contractABI, signer);
+                    const contract = new ethers.Contract(CONTRACT_CONFIG.address, CONTRACT_CONFIG.abi, signer);
 
                     setProvider(provider);
                     setContract(contract);
                     setUserAddress(address);
 
-                    const remaining = await contract.getRemainingMessages(address);
-                    setRemainingMessages(Number(remaining));
-                    setError('');
+                    updateRemainingMessages(contract, address);
+                    setNotification('Wallet connected successfully!');
                 } catch (err) {
-                    setError('Failed to connect wallet: ' + err.message);
+                    console.error('Failed to connect wallet:', err);
+                    setError(`Failed to connect wallet: ${err.message}`);
                 }
             };
 
+            // Disconnect wallet function
             const disconnectWallet = () => {
                 setProvider(null);
                 setContract(null);
@@ -253,77 +563,90 @@
                 setRemainingMessages(5);
                 setNewMessage('');
                 setError('');
+                setNotification('Wallet disconnected.');
             };
 
+            // Update remaining messages count
+            const updateRemainingMessages = async (contractInstance, address) => {
+                try {
+                    const remaining = await contractInstance.getRemainingMessages(address);
+                    setRemainingMessages(Number(remaining));
+                } catch (err) {
+                    console.error('Failed to get remaining messages:', err);
+                }
+            };
+
+            // Post message function
             const postMessage = async () => {
-                if (!contract || !newMessage) return;
+                if (!contract || !newMessage.trim() || remainingMessages === 0) return;
+                
                 setLoading(true);
                 setError('');
                 try {
                     const tx = await contract.postMessage(newMessage);
+                    setNotification('Message sent! Waiting for confirmation...');
+                    
                     await tx.wait();
                     setNewMessage('');
-                    const messages = await contract.getLastMessages();
-                    setMessages([...messages].reverse()); // Create a copy and reverse
-                    const remaining = await contract.getRemainingMessages(userAddress);
-                    setRemainingMessages(Number(remaining));
+                    setNotification('Message confirmed and posted successfully!');
+                    
+                    // Update remaining messages
+                    updateRemainingMessages(contract, userAddress);
                 } catch (err) {
-                    setError('Error posting message: ' + err.message);
+                    console.error('Error posting message:', err);
+                    if (err.code === 4001) {
+                        // User rejected transaction
+                        setError('Transaction was rejected by the user.');
+                    } else {
+                        setError(`Error posting message: ${err.message}`);
+                    }
+                } finally {
+                    setLoading(false);
                 }
-                setLoading(false);
             };
 
             return (
                 <div className="chat-container">
-                    <div>
-                        <div className="header">
-                            <a href="https://monadgame-nine.vercel.app/" target="_blank" rel="noopener noreferrer">
-                                Play Game
-                            </a>
-                        </div>
-                        <div className="wallet-buttons">
-                            {!userAddress ? (
-                                <button onClick={connectWallet}>Connect Wallet</button>
-                            ) : (
-                                <button onClick={disconnectWallet}>Disconnect</button>
-                            )}
-                        </div>
-                        {error && <p className="error">{error}</p>}
-                        {userAddress && (
-                            <p>Connected: {userAddress.slice(0, 6)}...{userAddress.slice(-4)}</p>
-                        )}
-                        <div>
-                            {messages.length > 0 ? (
-                                messages.map((msg, index) => (
-                                    <div key={index} className="message">
-                                        <p className="sender">{msg.sender.slice(0, 6)}...{msg.sender.slice(-4)}</p>
-                                        <p>{msg.content}</p>
-                                        <p className="timestamp">
-                                            {new Date(Number(msg.timestamp) * 1000).toLocaleTimeString()}
-                                        </p>
-                                    </div>
-                                ))
-                            ) : (
-                                <p>No messages yet.</p>
-                            )}
-                        </div>
+                    {/* Header */}
+                    <div className="header">
+                        <a href="https://monadgame-nine.vercel.app/" target="_blank" rel="noopener noreferrer">
+                            Play Game
+                        </a>
                     </div>
+                    
+                    {/* Wallet connection */}
+                    <WalletConnection 
+                        userAddress={userAddress}
+                        connectWallet={connectWallet}
+                        disconnectWallet={disconnectWallet}
+                    />
+                    
+                    {/* Error and notification area */}
+                    {error && <div className="error">{error}</div>}
+                    {notification && <div className="notification">{notification}</div>}
+                    
+                    {/* Wallet info */}
                     {userAddress && (
-                        <div className="input-area">
-                            <textarea
-                                value={newMessage}
-                                onChange={(e) => setNewMessage(e.target.value)}
-                                placeholder={`Enter message (max 100 chars, ${remainingMessages} left today)`}
-                                maxLength="100"
-                            />
-                            <button
-                                onClick={postMessage}
-                                disabled={loading || remainingMessages === 0}
-                            >
-                                {loading ? 'Sending...' : 'Send'}
-                            </button>
+                        <div className="wallet-info">
+                            <span>Connected: <span className="wallet-address">{formatAddress(userAddress)}</span></span>
+                            <span>Messages remaining: <span className="remaining-count">{remainingMessages}</span></span>
                         </div>
                     )}
+                    
+                    {/* Messages */}
+                    <MessageList messages={messages} loading={fetchingMessages} />
+                    
+                    {/* Message input */}
+                    <MessageInput 
+                        userAddress={userAddress}
+                        remainingMessages={remainingMessages}
+                        newMessage={newMessage}
+                        setNewMessage={setNewMessage}
+                        postMessage={postMessage}
+                        loading={loading}
+                    />
+                    
+                    {/* Footer */}
                     <div className="footer">
                         <p>Created by: <a href="https://testnet.monadexplorer.com/address/0x0b977acab5d9b8f654f48090955f5e00973be0fe" target="_blank" rel="noopener noreferrer">0x0b977acab5d9b8f654f48090955f5e00973be0fe</a></p>
                         <p>Twitter: <a href="https://x.com/Oprimedev" target="_blank" rel="noopener noreferrer">@Oprimedev</a></p>
@@ -332,6 +655,7 @@
             );
         };
 
+        // Render the app
         ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
