@@ -3,434 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Decentralized Chat</title>
+    <title>Decentralized Chat - Monad</title>
     <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
+        /* CSS Variables */
+        :root {
+            --bg-color: #0A0C0B; /* Slightly darker background */
+            --container-bg: rgba(30, 35, 40, 0.7); /* Darker container, less purple */
+            --primary-accent: #4A90E2; /* A blue accent */
+            --primary-accent-hover: #357ABD;
+            --secondary-accent: #50E3C2; /* A teal accent for positive feedback */
+            --error-color: #E94E77; /* Brighter error color */
+            --text-color: #EAEAEA;
+            --text-muted-color: rgba(234, 234, 234, 0.6);
+            --border-color: rgba(234, 234, 234, 0.2);
+            --message-bubble-bg: rgba(255, 255, 255, 0.08); /* Slightly lighter message bg */
+            --message-bubble-hover-bg: rgba(255, 255, 255, 0.12);
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --input-focus-bg: rgba(255, 255, 255, 0.1);
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --border-radius: 8px; /* Consistent border radius */
+        }
+
         /* Base styles */
         body {
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0e100f;
-            color: white;
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
         }
-        
+
         /* Container styles */
         .chat-container {
             max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: rgba(53,0,129,.5);
-            border-radius: 10px;
-            min-height: 80vh;
+            margin: 30px auto;
+            padding: 25px;
+            background-color: var(--container-bg);
+            border-radius: var(--border-radius);
+            min-height: calc(100vh - 60px);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
-        
+
         /* Header styles */
         .header {
             text-align: center;
-            margin-bottom: 20px;
-            padding: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
         }
-        
-        .header a {
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            font-weight: bold;
-            transition: color 0.3s ease;
-        }
-        
-        .header a:hover {
-            color: white;
-            text-decoration: underline;
-        }
-        
+        .header h1 { margin: 0 0 10px 0; font-size: 1.8em; color: var(--text-color); }
+        .header a { color: var(--primary-accent); text-decoration: none; font-weight: bold; transition: color 0.3s ease; }
+        .header a:hover { color: var(--primary-accent-hover); text-decoration: underline; }
+
         /* Message styles */
         .messages-container {
             overflow-y: auto;
-            max-height: 60vh;
+            flex-grow: 1;
             margin-bottom: 20px;
+            padding-right: 10px;
+            max-height: 60vh;
         }
-        
+        .messages-container::-webkit-scrollbar { width: 8px; }
+        .messages-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 4px; }
+        .messages-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; }
+        .messages-container::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.5); }
+
         .message {
-            background-color: rgba(255,255,255,0.1);
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 8px;
+            background-color: var(--message-bubble-bg);
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: var(--border-radius);
             transition: background-color 0.3s ease;
-        }
-        
-        .message:hover {
-            background-color: rgba(255,255,255,0.15);
-        }
-        
-        .message .sender {
-            font-weight: bold;
-            font-size: 0.9em;
-            margin-bottom: 4px;
-        }
-        
-        .message .content {
-            word-break: break-word;
-        }
-        
-        .message .timestamp {
-            font-size: 0.8em;
-            color: rgba(255,255,255,0.6);
-            text-align: right;
-            margin-top: 4px;
-        }
-        
-        /* Input area styles */
-        .input-area {
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            flex-direction: column;
         }
-        
+        .message:hover { background-color: var(--message-bubble-hover-bg); }
+        .message .sender { font-weight: bold; font-size: 0.9em; color: var(--secondary-accent); margin-bottom: 5px; }
+        .message .content { word-break: break-word; margin-bottom: 8px; }
+        .message .timestamp { font-size: 0.75em; color: var(--text-muted-color); text-align: right; margin-top: auto; }
+
+        /* Input area styles */
+        .input-area { display: flex; gap: 10px; margin-top: 15px; align-items: flex-start; }
         .input-area textarea {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 5px;
-            background-color: rgba(255,255,255,0.1);
-            color: white;
-            resize: none;
-            transition: background-color 0.3s ease;
+            flex: 1; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: var(--border-radius);
+            background-color: var(--input-bg); color: var(--text-color); resize: none;
+            transition: background-color 0.3s ease, border-color 0.3s ease; font-family: var(--font-family);
+            min-height: 45px; line-height: 1.4;
         }
-        
-        .input-area textarea:focus {
-            outline: none;
-            background-color: rgba(255,255,255,0.15);
-        }
-        
+        .input-area textarea:focus { outline: none; background-color: var(--input-focus-bg); border-color: var(--primary-accent); }
+        .input-area textarea::placeholder { color: var(--text-muted-color); opacity: 0.8; }
+
         /* Button styles */
         button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            background-color: rgba(53,0,129,.7);
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.1s ease;
+            padding: 12px 20px; border: none; border-radius: var(--border-radius); background-color: var(--primary-accent);
+            color: white; font-weight: bold; cursor: pointer; transition: background-color 0.3s ease, transform 0.1s ease;
+            line-height: 1.4; white-space: nowrap;
         }
-        
-        button:hover {
-            background-color: rgba(53,0,129,0.9);
-        }
-        
-        button:active {
-            transform: scale(0.98);
-        }
-        
-        button:disabled {
-            background-color: rgba(53,0,129,0.3);
-            cursor: not-allowed;
-        }
-        
-        /* Error and notification styles */
-        .error {
-            color: #ff5555;
-            font-size: 0.9em;
-            margin: 10px 0;
-            padding: 8px;
-            background-color: rgba(255,85,85,0.1);
-            border-radius: 5px;
-        }
-        
-        .notification {
-            color: #55ff7f;
-            font-size: 0.9em;
-            margin: 10px 0;
-            padding: 8px;
-            background-color: rgba(85,255,127,0.1);
-            border-radius: 5px;
-            transition: opacity 1s ease;
-        }
-        
-        .fade-out {
-            opacity: 0;
-        }
-        
+        button:hover { background-color: var(--primary-accent-hover); }
+        button:active { transform: scale(0.98); }
+        button:disabled { background-color: rgba(74, 144, 226, 0.4); cursor: not-allowed; opacity: 0.7; }
+
+        /* Connect/Disconnect Button styles */
+        .wallet-buttons { display: flex; justify-content: flex-end; margin-bottom: 15px; }
+
+        /* Status message styles (Error/Notification) */
+        .status-message { font-size: 0.9em; margin: 10px 0; padding: 10px 15px; border-radius: var(--border-radius); text-align: center; position: relative; }
+        .error { color: #FFFFFF; background-color: rgba(233, 78, 119, 0.3); border: 1px solid var(--error-color); }
+        .notification { color: #FFFFFF; background-color: rgba(80, 227, 194, 0.2); border: 1px solid var(--secondary-accent); transition: opacity 0.5s ease-out; }
+        .close-button { position: absolute; top: 5px; right: 10px; background: none; border: none; color: var(--text-muted-color); font-size: 1.2em; cursor: pointer; padding: 2px 5px; line-height: 1; }
+        .close-button:hover { color: var(--text-color); }
+        .fade-out { opacity: 0; }
+
         /* Wallet info styles */
-        .wallet-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
-        }
-        
-        .wallet-address {
-            font-family: monospace;
-            background-color: rgba(255,255,255,0.1);
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-        
-        .remaining-count {
-            font-weight: bold;
-            color: #55ff7f;
-        }
-        
-        /* Loading indicator */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
+        .wallet-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 8px 12px; background-color: rgba(255, 255, 255, 0.05); border-radius: var(--border-radius); font-size: 0.9em; }
+        .wallet-address { font-family: monospace; background-color: rgba(255, 255, 255, 0.1); padding: 3px 6px; border-radius: 4px; margin-left: 5px; }
+        .remaining-count { font-weight: bold; color: var(--secondary-accent); }
+
+        /* Loading indicator styles */
+        .loading-container { text-align: center; padding: 30px; color: var(--text-muted-color); }
+        .loading { display: inline-block; width: 24px; height: 24px; border: 4px solid rgba(255,255,255,.2); border-radius: 50%; border-top-color: var(--primary-accent); animation: spin 1s ease-in-out infinite; margin-bottom: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         /* Footer styles */
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 10px;
-            font-size: 0.9em;
-            color: rgba(255,255,255,0.6);
-            border-top: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .footer a {
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        
-        .footer a:hover {
-            color: white;
-            text-decoration: underline;
-        }
-        
+        .footer { text-align: center; margin-top: 30px; padding-top: 15px; font-size: 0.85em; color: var(--text-muted-color); border-top: 1px solid var(--border-color); }
+        .footer p { margin: 5px 0; }
+        .footer a { color: var(--primary-accent); text-decoration: none; transition: color 0.3s ease; }
+        .footer a:hover { color: var(--primary-accent-hover); text-decoration: underline; }
+
         /* Responsive design */
-        @media (max-width: 600px) {
-            .chat-container {
-                margin: 10px;
-                padding: 15px;
-                min-height: 90vh;
-            }
-            
-            .input-area {
-                flex-direction: column;
-            }
-            
-            .input-area textarea {
-                min-height: 80px;
-            }
+        @media (max-width: 700px) {
+            .chat-container { margin: 15px; padding: 20px; min-height: calc(100vh - 30px); }
+            .header h1 { font-size: 1.5em; }
+            .input-area { flex-direction: column; gap: 8px; }
+            .input-area button { width: 100%; }
+            .input-area textarea { min-height: 70px; }
+            .wallet-info { flex-direction: column; align-items: flex-start; gap: 5px; }
+        }
+        @media (max-width: 480px) {
+            body { font-size: 15px; }
+            .chat-container { margin: 10px; padding: 15px; min-height: calc(100vh - 20px); }
+            .header h1 { font-size: 1.3em; }
+            button { padding: 10px 15px; }
+            .input-area textarea { min-height: 60px; }
+            .message { padding: 8px 12px; }
+            .status-message { font-size: 0.85em; padding: 8px 12px; }
+            .close-button { right: 5px; }
         }
     </style>
 </head>
 <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+
     <script type="text/babel">
         const { useState, useEffect, useRef, useCallback } = React;
 
-        // Contract configuration
+        // --- Configuration ---
         const CONTRACT_CONFIG = {
             address: '0x70f5abC871395697E4C600b7dF6F9E7aBFe1ed42',
-            abi: [
-                {
-                    "anonymous": false,
-                    "inputs": [
-                        {
-                            "indexed": true,
-                            "internalType": "address",
-                            "name": "sender",
-                            "type": "address"
-                        },
-                        {
-                            "indexed": false,
-                            "internalType": "string",
-                            "name": "content",
-                            "type": "string"
-                        },
-                        {
-                            "indexed": false,
-                            "internalType": "uint256",
-                            "name": "timestamp",
-                            "type": "uint256"
-                        }
-                    ],
-                    "name": "MessagePosted",
-                    "type": "event"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "string",
-                            "name": "_content",
-                            "type": "string"
-                        }
-                    ],
-                    "name": "postMessage",
-                    "outputs": [],
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                },
-                {
-                    "inputs": [],
-                    "name": "getLastMessages",
-                    "outputs": [
-                        {
-                            "components": [
-                                {
-                                    "internalType": "address",
-                                    "name": "sender",
-                                    "type": "address"
-                                },
-                                {
-                                    "internalType": "string",
-                                    "name": "content",
-                                    "type": "string"
-                                },
-                                {
-                                    "internalType": "uint256",
-                                    "name": "timestamp",
-                                    "type": "uint256"
-                                }
-                            ],
-                            "internalType": "struct MessageBoard.Message[]",
-                            "name": "",
-                            "type": "tuple[]"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "address",
-                            "name": "_user",
-                            "type": "address"
-                        }
-                    ],
-                    "name": "getRemainingMessages",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function"
-                }
-            ],
+            abi: [ { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "sender", "type": "address" }, { "indexed": false, "internalType": "string", "name": "content", "type": "string" }, { "indexed": false, "internalType": "uint256", "name": "timestamp", "type": "uint256" } ], "name": "MessagePosted", "type": "event" }, { "inputs": [ { "internalType": "string", "name": "_content", "type": "string" } ], "name": "postMessage", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "getLastMessages", "outputs": [ { "components": [ { "internalType": "address", "name": "sender", "type": "address" }, { "internalType": "string", "name": "content", "type": "string" }, { "internalType": "uint256", "name": "timestamp", "type": "uint256" } ], "internalType": "struct MessageBoard.Message[]", "name": "", "type": "tuple[]" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "_user", "type": "address" } ], "name": "getRemainingMessages", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" } ], // Shortened ABI
             rpcUrl: 'https://testnet-rpc.monad.xyz'
         };
 
-        // Format timestamp to a human-readable format
+        // --- Helper Functions ---
         const formatTimestamp = (timestamp) => {
-            const date = new Date(timestamp * 1000);
+            if (!timestamp) return '';
+            const date = new Date(Number(timestamp) * 1000);
             const now = new Date();
-            
-            // If the message is from today, show only the time
+            if (isNaN(date.getTime())) return 'Invalid Date';
             if (date.toDateString() === now.toDateString()) {
                 return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             }
-            
-            // Otherwise show the date and time
-            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' }) + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         };
 
-        // Format wallet address for display
         const formatAddress = (address) => {
             if (!address) return '';
             return `${address.slice(0, 6)}...${address.slice(-4)}`;
         };
 
-        // Message component
-        const Message = ({ message }) => {
+        // --- React Components ---
+
+        // Message Component
+        const Message = React.memo(({ message }) => { // Use React.memo for potential optimization
             return (
                 <div className="message">
                     <div className="sender">{formatAddress(message.sender)}</div>
                     <div className="content">{message.content}</div>
-                    <div className="timestamp">{formatTimestamp(Number(message.timestamp))}</div>
+                    <div className="timestamp">{formatTimestamp(message.timestamp)}</div>
                 </div>
             );
-        };
+        });
 
-        // Message list component
+        // MessageList Component
         const MessageList = ({ messages, loading }) => {
             const messagesEndRef = useRef(null);
-            
-            // Scroll to bottom effect
+            const containerRef = useRef(null); // Ref for container to check scroll position
+
             useEffect(() => {
-                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-            }, [messages]);
-            
+                const container = containerRef.current;
+                if (messages.length > 0 && !loading && container) {
+                    // Scroll to bottom only if user is already near the bottom
+                    const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 100; // 100px threshold
+                    if (isScrolledToBottom) {
+                        setTimeout(() => {
+                            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        }, 100); // Short delay might help rendering
+                    }
+                }
+            }, [messages, loading]); // Rerun when messages or loading state change
+
             return (
-                <div className="messages-container">
+                <div className="messages-container" ref={containerRef}>
                     {loading ? (
-                        <div style={{ textAlign: 'center', padding: '20px' }}>
+                        <div className="loading-container">
                             <div className="loading"></div>
                             <p>Loading messages...</p>
                         </div>
                     ) : messages.length > 0 ? (
                         <>
-                            {messages.map((msg, index) => (
-                                <Message key={`${msg.sender}-${msg.timestamp}-${index}`} message={msg} />
+                            {messages.map((msg) => ( // Removed index from key if timestamp+sender is unique enough
+                                <Message key={`${msg.sender}-${msg.timestamp}`} message={msg} />
                             ))}
-                            <div ref={messagesEndRef} />
+                            <div ref={messagesEndRef} /> {/* Element to scroll to */}
                         </>
                     ) : (
-                        <p style={{ textAlign: 'center' }}>No messages yet. Be the first to post!</p>
+                        <p style={{ textAlign: 'center', color: 'var(--text-muted-color)' }}>No messages yet. Be the first to post!</p>
                     )}
                 </div>
             );
         };
 
-        // Wallet connection component
-        const WalletConnection = ({ userAddress, connectWallet, disconnectWallet }) => {
+        // WalletConnection Component
+        const WalletConnection = React.memo(({ userAddress, connectWallet, disconnectWallet }) => {
             return (
                 <div className="wallet-buttons">
                     {!userAddress ? (
                         <button onClick={connectWallet}>Connect Wallet</button>
                     ) : (
-                        <button onClick={disconnectWallet}>Disconnect</button>
+                        <button onClick={disconnectWallet} style={{ backgroundColor: 'var(--error-color)' }}>Disconnect</button>
                     )}
                 </div>
             );
-        };
+        });
 
-        // Message input component
+        // MessageInput Component
         const MessageInput = ({ userAddress, remainingMessages, newMessage, setNewMessage, postMessage, loading }) => {
             const handleKeyDown = (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
+                    e.preventDefault(); // Prevent newline on Enter
                     postMessage();
                 }
             };
-            
+            const placeholderText = userAddress
+                ? `Enter message (max 100 chars, ${remainingMessages} left today). Press Enter to send.`
+                : 'Connect wallet to chat';
+
             return (
                 <div className="input-area">
                     <textarea
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder={userAddress 
-                            ? `Enter message (max 100 chars, ${remainingMessages} left today). Press Enter to send.` 
-                            : 'Connect wallet to chat'
-                        }
+                        placeholder={placeholderText}
                         maxLength="100"
-                        disabled={!userAddress || remainingMessages === 0}
+                        disabled={!userAddress || remainingMessages <= 0 || loading} // Check remainingMessages <= 0
+                        rows="2"
+                        aria-label="New message input"
                     />
                     <button
                         onClick={postMessage}
-                        disabled={loading || !userAddress || remainingMessages === 0 || !newMessage.trim()}
+                        disabled={loading || !userAddress || remainingMessages <= 0 || !newMessage.trim()}
                     >
                         {loading ? 'Sending...' : 'Send'}
                     </button>
@@ -438,224 +288,385 @@
             );
         };
 
-        // Main app component
+        // --- Main App Component ---
         const App = () => {
+            // State Hooks
             const [provider, setProvider] = useState(null);
-            const [contract, setContract] = useState(null);
-            const [readOnlyContract, setReadOnlyContract] = useState(null);
+            const [contract, setContract] = useState(null); // Writable contract
+            const [readOnlyContract, setReadOnlyContract] = useState(null); // Read-only contract
             const [messages, setMessages] = useState([]);
             const [newMessage, setNewMessage] = useState('');
             const [userAddress, setUserAddress] = useState('');
-            const [remainingMessages, setRemainingMessages] = useState(5);
-            const [loading, setLoading] = useState(false);
-            const [fetchingMessages, setFetchingMessages] = useState(true);
+            const [remainingMessages, setRemainingMessages] = useState(5); // Default assumption
+            const [loading, setLoading] = useState(false); // General loading state (sending, connecting)
+            const [fetchingMessages, setFetchingMessages] = useState(true); // Specific state for initial message fetch
             const [error, setError] = useState('');
             const [notification, setNotification] = useState('');
-            const messagePostedListener = useRef(null);
+            const notificationTimer = useRef(null);
+            const accountListenerActive = useRef(false); // Track if wallet listeners are active
 
-            // Initialize read-only contract for public data access
+            // --- Memoized Callback Functions ---
+
+            // Clear Error
+            const clearError = useCallback(() => setError(''), []);
+
+            // Show Notification (auto-hides)
+             const showNotification = useCallback((message) => {
+                 setNotification(message);
+                 clearTimeout(notificationTimer.current);
+                 notificationTimer.current = setTimeout(() => {
+                     setNotification('');
+                 }, 5000); // Hide after 5 seconds
+             }, []); // No dependencies needed
+
+            // Update Remaining Messages Count
+             const updateRemainingMessages = useCallback(async (contractInstance, address) => {
+                if (!contractInstance || !address) return;
+                 console.log(`Updating remaining messages for ${address}`);
+                try {
+                    const remaining = await contractInstance.getRemainingMessages(address);
+                    setRemainingMessages(Number(remaining));
+                    console.log(`Remaining messages: ${Number(remaining)}`);
+                } catch (err) {
+                    console.error('Failed to get remaining messages:', err);
+                    showNotification('Could not update remaining messages count.'); // Notify user
+                }
+            }, [showNotification]); // Depends on showNotification
+
+            // Load Initial Messages (with Retry and Revised Logic)
+             const loadMessages = useCallback(async (retryCount = 0) => {
+                if (!readOnlyContract) {
+                    console.log("loadMessages: readOnlyContract not ready.");
+                    // Avoid setting error if connection is still initializing
+                    if(!fetchingMessages && !error) { // Only set error if not already fetching/erroring
+                        setError("Cannot load messages: Connection not available.");
+                    }
+                    setFetchingMessages(false); // Stop fetching state
+                    return;
+                }
+
+                console.log(`Attempting to load messages (Attempt ${retryCount + 1})`);
+                let fetchedSuccessfully = false;
+                setFetchingMessages(true);
+
+                try {
+                    const fetchedMessages = await readOnlyContract.getLastMessages();
+                     if (Array.isArray(fetchedMessages)) {
+                         console.log(`Messages fetched: ${fetchedMessages.length}`);
+                         // Process messages: ensure structure is correct before setting state
+                         const processedMessages = fetchedMessages.map(msg => ({
+                            sender: msg.sender,
+                            content: msg.content,
+                            timestamp: Number(msg.timestamp) // Ensure timestamp is a number
+                         })).filter(msg => msg.sender && msg.timestamp); // Basic validation
+
+                         setMessages([...processedMessages].reverse()); // Reverse for chronological order
+                         fetchedSuccessfully = true;
+                     } else {
+                         console.warn("getLastMessages did not return an array:", fetchedMessages);
+                         setMessages([]); // Set to empty array if not array
+                         fetchedSuccessfully = true; // Treat as 'handled'
+                     }
+                    // Clear error only if a *retry* attempt was successful
+                    if (retryCount > 0 && fetchedSuccessfully) clearError();
+
+                } catch (err) {
+                    console.error('Failed to load messages:', err);
+                    if (retryCount < 3) {
+                        const delay = 1000 * Math.pow(2, retryCount); // Exponential backoff
+                        console.log(`Retrying message load in ${delay}ms`);
+                        setTimeout(() => loadMessages(retryCount + 1), delay);
+                        // IMPORTANT: Return here to prevent the finally block running prematurely
+                        return;
+                    } else {
+                        setError('Failed to load messages after multiple attempts. Check console or refresh.');
+                        // Fall through to finally block
+                    }
+                } finally {
+                    // Stop fetching state if successful OR final attempt failed
+                    if (fetchedSuccessfully || retryCount >= 3) {
+                       setFetchingMessages(false);
+                       console.log("Finished fetching messages cycle (success or final attempt).");
+                    }
+                }
+            }, [readOnlyContract, clearError]); // Dependencies
+
+             // Forward declarations for handlers used in disconnectWallet/connectWallet
+             let handleAccountsChanged = () => {};
+             let handleChainChanged = () => {};
+
+             // Disconnect Wallet
+             const disconnectWallet = useCallback((notify = true) => {
+                 console.log("Disconnecting wallet.");
+                 setProvider(null);
+                 setContract(null);
+                 setUserAddress('');
+                 setRemainingMessages(5); // Reset to default assumption
+                 setNewMessage('');
+                 clearError(); // Use memoized version
+                 if(notify) showNotification('Wallet disconnected.'); // Use memoized version
+
+                 // Remove listeners
+                 if (window.ethereum?.removeListener && accountListenerActive.current) {
+                     console.log("Removing wallet event listeners.");
+                     window.ethereum.removeListener('accountsChanged', handleAccountsChanged); // Use the handler reference
+                     window.ethereum.removeListener('chainChanged', handleChainChanged);     // Use the handler reference
+                     accountListenerActive.current = false;
+                 }
+             }, [showNotification, clearError]); // Depends on stable callbacks
+
+             // Handle Account Changes
+             handleAccountsChanged = useCallback((accounts) => {
+                console.log("Accounts changed:", accounts);
+                if (accounts.length === 0) {
+                    console.log("MetaMask disconnected or locked.");
+                    disconnectWallet(); // Call disconnect
+                } else if (userAddress && accounts[0].toLowerCase() !== userAddress.toLowerCase()) {
+                    // Only reconnect if the address actually changed from a previously connected one
+                    console.log("Switching account...");
+                    // Let connectWallet handle the full reconnection logic
+                    connectWallet();
+                } else if (!userAddress && accounts.length > 0) {
+                    // If previously disconnected and now an account is available, connect
+                    console.log("Account available, attempting connection...");
+                    connectWallet();
+                }
+            }, [userAddress, disconnectWallet]); // Depends on userAddress and stable disconnectWallet. connectWallet defined later.
+
+             // Handle Network Changes
+             handleChainChanged = useCallback((_chainId) => {
+                 console.log("Network changed:", _chainId);
+                 showNotification("Network changed. Reloading page...");
+                 setTimeout(() => window.location.reload(), 1500);
+             }, [showNotification]); // Depends on stable showNotification
+
+            // Connect Wallet
+            const connectWallet = useCallback(async () => {
+                console.log("Attempting to connect wallet...");
+                clearError();
+                showNotification(''); // Clear previous notifications
+                setLoading(true); // Set loading state
+
+                try {
+                    if (!window.ethereum) {
+                        throw new Error('MetaMask is not installed. Please install it.');
+                    }
+
+                    const web3Provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+                    await web3Provider.send('eth_requestAccounts', []);
+                    const signer = web3Provider.getSigner();
+                    const address = await signer.getAddress();
+                    const connectedContract = new ethers.Contract(CONTRACT_CONFIG.address, CONTRACT_CONFIG.abi, signer);
+
+                    // Check network (optional but recommended)
+                    // const network = await web3Provider.getNetwork();
+                    // console.log("Connected Network:", network);
+                    // if (network.chainId !== EXPECTED_CHAIN_ID) { // Replace with desired chain ID if needed
+                    //     throw new Error(`Please connect to the correct network (e.g., Monad Testnet).`);
+                    // }
+
+                    setProvider(web3Provider);
+                    setContract(connectedContract);
+                    setUserAddress(address); // Set address *after* successful connection
+                    console.log(`Wallet connected: ${address}`);
+
+                    await updateRemainingMessages(connectedContract, address); // Fetch message count
+                    showNotification('Wallet connected!');
+
+                    // Add listeners if not already active
+                    if (window.ethereum && !accountListenerActive.current) {
+                         console.log("Adding wallet event listeners.");
+                         window.ethereum.on('accountsChanged', handleAccountsChanged);
+                         window.ethereum.on('chainChanged', handleChainChanged);
+                         accountListenerActive.current = true;
+                     }
+
+                } catch (err) {
+                    console.error('Failed to connect wallet:', err);
+                    if (err.code === 4001 || err.code === 'ACTION_REJECTED') {
+                        setError('Wallet connection request rejected.');
+                    } else {
+                        setError(`Failed to connect: ${err.message}`);
+                    }
+                    // Reset state on failure
+                    disconnectWallet(false); // Disconnect silently
+                } finally {
+                    setLoading(false); // Clear loading state
+                }
+            }, [clearError, showNotification, updateRemainingMessages, handleAccountsChanged, handleChainChanged, disconnectWallet]); // Dependencies
+
+
+            // Post Message
+            const postMessage = useCallback(async () => {
+                if (!contract || !newMessage.trim() || remainingMessages <= 0 || loading) return;
+
+                console.log("Attempting to post message:", newMessage);
+                setLoading(true);
+                clearError();
+
+                try {
+                    const tx = await contract.postMessage(newMessage);
+                    showNotification('Sending... Tx: ' + formatAddress(tx.hash));
+                    console.log("Transaction sent:", tx.hash);
+
+                    // Clear input optimistically
+                    setNewMessage('');
+
+                    // Wait for the transaction briefly to catch immediate reverts, but rely on listener for success update
+                    try {
+                        await tx.wait(1); // Wait for 1 confirmation
+                        console.log("Transaction likely submitted, waiting for event confirmation.");
+                        // Note: Event listener should handle updating remaining messages and final confirmation notification
+                    } catch (waitError) {
+                        // Handle cases where the transaction fails quickly (e.g., out of gas, reverted)
+                         console.error("Transaction failed during wait:", waitError);
+                         if (waitError.code === 'TRANSACTION_REPLACED' || waitError.code === 'REPLACEMENT_UNDERPRICED') {
+                            setError('Transaction replaced or cancelled.');
+                         } else if (waitError.reason){
+                             setError(`Transaction failed: ${waitError.reason}`);
+                         } else {
+                             setError('Transaction failed. Check console.');
+                         }
+                         showNotification(''); // Clear "Sending..." notification
+                         // Don't update remaining messages here, rely on error or eventual success
+                    }
+
+                } catch (err) {
+                    console.error('Error posting message:', err);
+                    showNotification(''); // Clear "Sending..." notification
+                    if (err.code === 4001 || err.code === 'ACTION_REJECTED') {
+                        setError('Transaction rejected in wallet.');
+                    } else if (err.reason) {
+                        setError(`Transaction failed: ${err.reason}`);
+                    } else if (err.message?.includes("insufficient funds")) {
+                        setError('Insufficient funds for transaction.');
+                    } else if (err.message?.includes("daily limit")) {
+                         setError('Daily message limit reached.');
+                         updateRemainingMessages(contract, userAddress); // Re-sync count
+                    } else {
+                        setError(`Error sending message. See console.`);
+                    }
+                } finally {
+                    setLoading(false); // Stop loading indicator
+                }
+            }, [contract, newMessage, remainingMessages, loading, clearError, showNotification, updateRemainingMessages, userAddress]);
+
+            // --- Effect Hooks ---
+
+            // Initialize read-only contract on mount
             useEffect(() => {
                 try {
-                    const provider = new ethers.providers.JsonRpcProvider(CONTRACT_CONFIG.rpcUrl);
-                    const contract = new ethers.Contract(CONTRACT_CONFIG.address, CONTRACT_CONFIG.abi, provider);
-                    setReadOnlyContract(contract);
+                    const rpcProvider = new ethers.providers.JsonRpcProvider(CONTRACT_CONFIG.rpcUrl);
+                    const instance = new ethers.Contract(CONTRACT_CONFIG.address, CONTRACT_CONFIG.abi, rpcProvider);
+                    setReadOnlyContract(instance);
+                    console.log("Read-only contract initialized.");
                 } catch (err) {
                     console.error('Failed to initialize read-only contract:', err);
-                    setError('Failed to initialize connection. Please refresh the page.');
+                    setError('Failed to initialize connection. Please refresh.');
+                    setFetchingMessages(false); // Stop loading if initialization fails
                 }
-            }, []);
+            }, []); // Run only once on mount
 
-            // Load messages on page load
+            // Load messages when readOnlyContract is ready
             useEffect(() => {
                 if (readOnlyContract) {
                     loadMessages();
                 }
-            }, [readOnlyContract]);
+            }, [readOnlyContract, loadMessages]); // Rerun if contract or loadMessages function changes
 
-            // Set up event listener for new messages
-            useEffect(() => {
-                if (contract) {
-                    // Remove any existing listeners
-                    if (messagePostedListener.current) {
-                        contract.off("MessagePosted", messagePostedListener.current);
-                    }
-                    
-                    // Set up new listener
-                    messagePostedListener.current = (sender, content, timestamp) => {
-                        const newMsg = { sender, content, timestamp };
-                        setMessages(prevMsgs => [newMsg, ...prevMsgs]);
-                    };
-                    
-                    contract.on("MessagePosted", messagePostedListener.current);
-                    
-                    // Cleanup listener on unmount
-                    return () => {
-                        if (messagePostedListener.current) {
-                            contract.off("MessagePosted", messagePostedListener.current);
-                        }
-                    };
-                }
-            }, [contract]);
+            // Setup MessagePosted event listener
+             useEffect(() => {
+                 const contractToListen = contract || readOnlyContract; // Listen on write contract if connected, else read-only
+                 let listener = null;
 
-            // Auto-hide notifications after 5 seconds
-            useEffect(() => {
-                if (notification) {
-                    const timer = setTimeout(() => {
-                        setNotification('');
-                    }, 5000);
-                    return () => clearTimeout(timer);
-                }
-            }, [notification]);
+                 if (contractToListen) {
+                    listener = (sender, content, timestamp) => {
+                         console.log("MessagePosted event received:", { sender, content, timestamp: Number(timestamp) });
+                         const newMsg = { sender, content, timestamp: Number(timestamp) };
 
-            // Load messages function with retry logic
-            const loadMessages = async (retryCount = 0) => {
-                if (!readOnlyContract) return;
-                
-                setFetchingMessages(true);
-                try {
-                    const messages = await readOnlyContract.getLastMessages();
-                    setMessages([...messages].reverse()); // Create a copy and reverse
-                    setError('');
-                } catch (err) {
-                    console.error('Failed to load messages:', err);
-                    if (retryCount < 3) {
-                        // Exponential backoff retry
-                        setTimeout(() => loadMessages(retryCount + 1), 1000 * Math.pow(2, retryCount));
-                    } else {
-                        setError('Failed to load messages. Please refresh the page.');
-                    }
-                } finally {
-                    setFetchingMessages(false);
-                }
-            };
+                         setMessages(prevMsgs => {
+                             // Prevent duplicates based on sender+timestamp
+                             const exists = prevMsgs.some(msg =>
+                                 msg.sender.toLowerCase() === sender.toLowerCase() &&
+                                 msg.timestamp === newMsg.timestamp
+                             );
+                             return exists ? prevMsgs : [...prevMsgs, newMsg];
+                         });
 
-            // Connect wallet function
-            const connectWallet = async () => {
-                setError('');
-                try {
-                    if (!window.ethereum) {
-                        throw new Error('MetaMask is not installed. Please install MetaMask to use this app.');
-                    }
-                    
-                    const provider = new ethers.providers.Web3Provider(window.ethereum);
-                    await provider.send('eth_requestAccounts', []);
-                    const signer = provider.getSigner();
-                    const address = await signer.getAddress();
-                    const contract = new ethers.Contract(CONTRACT_CONFIG.address, CONTRACT_CONFIG.abi, signer);
+                         // If the message was sent by the current connected user, update their remaining count and notify
+                         if (contract && userAddress && sender.toLowerCase() === userAddress.toLowerCase()) {
+                            console.log("Updating remaining messages after own post event confirmed.");
+                            updateRemainingMessages(contract, userAddress);
+                            showNotification('Message confirmed & posted!'); // Final confirmation
+                         }
+                     };
 
-                    setProvider(provider);
-                    setContract(contract);
-                    setUserAddress(address);
+                     console.log("Setting up MessagePosted listener on contract:", contractToListen.address);
+                     contractToListen.on("MessagePosted", listener);
 
-                    updateRemainingMessages(contract, address);
-                    setNotification('Wallet connected successfully!');
-                } catch (err) {
-                    console.error('Failed to connect wallet:', err);
-                    setError(`Failed to connect wallet: ${err.message}`);
-                }
-            };
+                     // Cleanup listener on component unmount or when dependencies change
+                     return () => {
+                         if (listener) {
+                            console.log("Cleaning up MessagePosted listener.");
+                            contractToListen.off("MessagePosted", listener);
+                         }
+                     };
+                 }
+             }, [contract, readOnlyContract, userAddress, updateRemainingMessages, showNotification]); // Dependencies
 
-            // Disconnect wallet function
-            const disconnectWallet = () => {
-                setProvider(null);
-                setContract(null);
-                setUserAddress('');
-                setRemainingMessages(5);
-                setNewMessage('');
-                setError('');
-                setNotification('Wallet disconnected.');
-            };
-
-            // Update remaining messages count
-            const updateRemainingMessages = async (contractInstance, address) => {
-                try {
-                    const remaining = await contractInstance.getRemainingMessages(address);
-                    setRemainingMessages(Number(remaining));
-                } catch (err) {
-                    console.error('Failed to get remaining messages:', err);
-                }
-            };
-
-            // Post message function
-            const postMessage = async () => {
-                if (!contract || !newMessage.trim() || remainingMessages === 0) return;
-                
-                setLoading(true);
-                setError('');
-                try {
-                    const tx = await contract.postMessage(newMessage);
-                    setNotification('Message sent! Waiting for confirmation...');
-                    
-                    await tx.wait();
-                    setNewMessage('');
-                    setNotification('Message confirmed and posted successfully!');
-                    
-                    // Update remaining messages
-                    updateRemainingMessages(contract, userAddress);
-                } catch (err) {
-                    console.error('Error posting message:', err);
-                    if (err.code === 4001) {
-                        // User rejected transaction
-                        setError('Transaction was rejected by the user.');
-                    } else {
-                        setError(`Error posting message: ${err.message}`);
-                    }
-                } finally {
-                    setLoading(false);
-                }
-            };
-
+            // --- Render ---
             return (
                 <div className="chat-container">
                     {/* Header */}
                     <div className="header">
+                         <h1>Monad Game Chat</h1>
                         <a href="https://monadgame-nine.vercel.app/" target="_blank" rel="noopener noreferrer">
                             Play Game
                         </a>
                     </div>
-                    
-                    {/* Wallet connection */}
-                    <WalletConnection 
+
+                    {/* Wallet Connection Button */}
+                    <WalletConnection
                         userAddress={userAddress}
                         connectWallet={connectWallet}
-                        disconnectWallet={disconnectWallet}
+                        disconnectWallet={() => disconnectWallet(true)} // Ensure notification shows on manual disconnect
                     />
-                    
-                    {/* Error and notification area */}
-                    {error && <div className="error">{error}</div>}
-                    {notification && <div className="notification">{notification}</div>}
-                    
-                    {/* Wallet info */}
+
+                    {/* Status Messages (Error/Notification) */}
+                     {error && <div className="status-message error">{error} <button className="close-button" onClick={clearError} aria-label="Close error message">&times;</button></div>}
+                     {notification && <div key={notification} className={`status-message notification ${!notification ? 'fade-out' : ''}`}>{notification}</div>}
+
+                    {/* Wallet Info Display */}
                     {userAddress && (
                         <div className="wallet-info">
                             <span>Connected: <span className="wallet-address">{formatAddress(userAddress)}</span></span>
-                            <span>Messages remaining: <span className="remaining-count">{remainingMessages}</span></span>
+                            <span>Messages Left: <span className="remaining-count">{remainingMessages}</span></span>
                         </div>
                     )}
-                    
-                    {/* Messages */}
+
+                    {/* Message List Area */}
                     <MessageList messages={messages} loading={fetchingMessages} />
-                    
-                    {/* Message input */}
-                    <MessageInput 
+
+                    {/* Message Input Area */}
+                    <MessageInput
                         userAddress={userAddress}
                         remainingMessages={remainingMessages}
                         newMessage={newMessage}
                         setNewMessage={setNewMessage}
                         postMessage={postMessage}
-                        loading={loading}
+                        loading={loading} // Pass general loading state here
                     />
-                    
+
                     {/* Footer */}
                     <div className="footer">
-                        <p>Created by: <a href="https://testnet.monadexplorer.com/address/0x0b977acab5d9b8f654f48090955f5e00973be0fe" target="_blank" rel="noopener noreferrer">0x0b977acab5d9b8f654f48090955f5e00973be0fe</a></p>
-                        <p>Twitter: <a href="https://x.com/Oprimedev" target="_blank" rel="noopener noreferrer">@Oprimedev</a></p>
+                        <p>Contract: <a href={`https://testnet.monadexplorer.com/address/${CONTRACT_CONFIG.address}`} target="_blank" rel="noopener noreferrer">{formatAddress(CONTRACT_CONFIG.address)}</a></p>
+                        <p>Developer: <a href="https://x.com/Oprimedev" target="_blank" rel="noopener noreferrer">@Oprimedev</a></p>
                     </div>
                 </div>
             );
-        };
+        }; // End of App component
 
-        // Render the app
+        // Render the App component into the DOM
         ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
