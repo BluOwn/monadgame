@@ -17,453 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let signer = null;
     let userAddress = null;
     let contract = null;
+
     // Smart contract details
     const contractAddress = '0x12b80421b226646eA44628F1cd7795E3247F9b33'; // Replace with your deployed contract address
     const creatorAddress = '0x0b977acab5d9b8f654f48090955f5e00973be0fe'; // Replace with your MetaMask address
     const contractABI = [
-        {
-            "inputs": [],
-            "stateMutability": "nonpayable",
-            "type": "constructor"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "spender",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "allowance",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "needed",
-                    "type": "uint256"
-                }
-            ],
-            "name": "ERC20InsufficientAllowance",
-            "type": "error"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "sender",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "balance",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "needed",
-                    "type": "uint256"
-                }
-            ],
-            "name": "ERC20InsufficientBalance",
-            "type": "error"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "approver",
-                    "type": "address"
-                }
-            ],
-            "name": "ERC20InvalidApprover",
-            "type": "error"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "receiver",
-                    "type": "address"
-                }
-            ],
-            "name": "ERC20InvalidReceiver",
-            "type": "error"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "sender",
-                    "type": "address"
-                }
-            ],
-            "name": "ERC20InvalidSender",
-            "type": "error"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "spender",
-                    "type": "address"
-                }
-            ],
-            "name": "ERC20InvalidSpender",
-            "type": "error"
-        },
-        {
-            "anonymous": false,
-            "inputs": [
-                {
-                    "indexed": true,
-                    "internalType": "address",
-                    "name": "owner",
-                    "type": "address"
-                },
-                {
-                    "indexed": true,
-                    "internalType": "address",
-                    "name": "spender",
-                    "type": "address"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "value",
-                    "type": "uint256"
-                }
-            ],
-            "name": "Approval",
-            "type": "event"
-        },
-        {
-            "anonymous": false,
-            "inputs": [
-                {
-                    "indexed": true,
-                    "internalType": "address",
-                    "name": "from",
-                    "type": "address"
-                },
-                {
-                    "indexed": true,
-                    "internalType": "address",
-                    "name": "to",
-                    "type": "address"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "value",
-                    "type": "uint256"
-                }
-            ],
-            "name": "Transfer",
-            "type": "event"
-        },
-        {
-            "inputs": [],
-            "name": "CREATOR_ADDRESS",
-            "outputs": [
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "MAX_MINT_PER_DAY",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "MAX_TOKENS_PER_MINT",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "TOTAL_SUPPLY",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "owner",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "spender",
-                    "type": "address"
-                }
-            ],
-            "name": "allowance",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "spender",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "value",
-                    "type": "uint256"
-                }
-            ],
-            "name": "approve",
-            "outputs": [
-                {
-                    "internalType": "bool",
-                    "name": "",
-                    "type": "bool"
-                }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "account",
-                    "type": "address"
-                }
-            ],
-            "name": "balanceOf",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "decimals",
-            "outputs": [
-                {
-                    "internalType": "uint8",
-                    "name": "",
-                    "type": "uint8"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "getCurrentDay",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "name": "lastMintDay",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "amount",
-                    "type": "uint256"
-                }
-            ],
-            "name": "mint",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "name": "mintCount",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "mintedSupply",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "name",
-            "outputs": [
-                {
-                    "internalType": "string",
-                    "name": "",
-                    "type": "string"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "symbol",
-            "outputs": [
-                {
-                    "internalType": "string",
-                    "name": "",
-                    "type": "string"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "totalSupply",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "to",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "value",
-                    "type": "uint256"
-                }
-            ],
-            "name": "transfer",
-            "outputs": [
-                {
-                    "internalType": "bool",
-                    "name": "",
-                    "type": "bool"
-                }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "from",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "to",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "value",
-                    "type": "uint256"
-                }
-            ],
-            "name": "transferFrom",
-            "outputs": [
-                {
-                    "internalType": "bool",
-                    "name": "",
-                    "type": "bool"
-                }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        }
-    ]; // Replace with the ABI from Remix
+        // Your contract ABI here
+        // ...
+    ]; 
 
     // Update footer with addresses
     contractAddressElement.textContent = contractAddress;
@@ -589,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mintedSupply.textContent = ethers.utils.formatUnits(totalMinted, 18);
 
             // Update user-specific info if connected
-            if (userAddress) {
+            if (userAddress && signer) {
                 dailyMints.innerHTML = '<div class="loading"><div></div><div></div><div></div><div></div></div>';
                 gmtBalance.innerHTML = '<div class="loading"><div></div><div></div><div></div><div></div></div>';
                 
@@ -635,24 +196,41 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Request accounts from MetaMask
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            signer = provider.getSigner();
+            
+            if (accounts.length === 0) {
+                throw new Error('No accounts found');
+            }
+            
             userAddress = accounts[0];
+            signer = provider.getSigner();
+            
+            // Verify signer is working by getting its address
+            const signerAddress = await signer.getAddress();
+            if (signerAddress.toLowerCase() !== userAddress.toLowerCase()) {
+                throw new Error('Signer address mismatch');
+            }
+            
+            // Update contract with signer
+            contract = new ethers.Contract(contractAddress, contractABI, signer);
+            
+            // Update UI
             walletAddress.textContent = userAddress;
             walletInfo.classList.remove('hidden');
             connectButton.style.display = 'none';
             gameResult.classList.add('hidden');
             disconnectMessage.classList.add('hidden');
             
-            // Initialize game stats
-            GameStats.initialize(userAddress);
-            
-            // Update contract with signer
-            contract = contract.connect(signer);
             // Update mint count, balance, and supply
             await updateUserInfo();
         } catch (error) {
             console.error('Failed to connect to MetaMask:', error);
             showToast('Failed to connect to MetaMask. Please try again.', 3000);
+            
+            // Reset connection state on error
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            contract = new ethers.Contract(contractAddress, contractABI, provider);
+            signer = null;
+            userAddress = null;
         }
     });
 
@@ -674,6 +252,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         try {
+            // Verify contract has signer
+            if (!contract.signer) {
+                // Reconnect signer if needed
+                contract = contract.connect(signer);
+            }
+            
             // Disable button and show loading state
             playButton.disabled = true;
             playButton.textContent = 'Processing...';
@@ -695,28 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Show minting animation
             await animateMinting(randomNumber);
             
-            // Update last mint amount
-            lastMintAmount = randomNumber;
-            
-            // Check for achievements
-            const newAchievements = Achievements.check(userAddress, parseFloat(gmtBalance.textContent), parseInt(dailyMints.textContent), lastMintAmount);
-            
-            // Display any new achievements
-            if (newAchievements.length > 0) {
-                // Wait a bit before showing achievements
-                setTimeout(() => {
-                    newAchievements.forEach((achievement, index) => {
-                        // Stagger display of multiple achievements
-                        setTimeout(() => {
-                            Achievements.displayAchievement(achievement);
-                        }, index * 4500); // Stagger by 4.5 seconds
-                    });
-                }, 1000);
-            }
-            
-            // Update game stats
-            GameStats.update(userAddress, randomNumber);
-            
             // Update UI
             gameResult.textContent = `You received ${randomNumber} GMT tokens!`;
             gameResult.classList.remove('hidden');
@@ -735,12 +297,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Disconnect wallet and refresh page
+    // Disconnect wallet
     disconnectButton.addEventListener('click', () => {
-        provider = null;
+        // Reset state
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        contract = new ethers.Contract(contractAddress, contractABI, provider);
         signer = null;
         userAddress = null;
-        contract = null;
+        
+        // Update UI
         walletInfo.classList.add('hidden');
         connectButton.style.display = 'block';
         gameResult.classList.add('hidden');
@@ -748,18 +313,9 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyMints.textContent = '0';
         mintProgress.value = '0';
         gmtBalance.textContent = '0';
-        disconnectMessage.classList.remove('hidden');
-        setTimeout(() => window.location.reload(), 1000); // Refresh after 1 second
-    });
-    
-    // Achievements button
-    document.getElementById('achievementsButton').addEventListener('click', () => {
-        Achievements.showAll(userAddress);
-    });
-    
-    // Stats button
-    document.getElementById('statsButton').addEventListener('click', () => {
-        GameStats.showStats(userAddress);
+        
+        // Show disconnect message but don't reload automatically
+        showToast('Wallet disconnected successfully', 3000);
     });
 
     // Handle account or network change
@@ -768,17 +324,20 @@ document.addEventListener('DOMContentLoaded', () => {
             userAddress = accounts[0];
             walletAddress.textContent = userAddress;
             signer = provider.getSigner();
-            contract = contract.connect(signer);
+            contract = new ethers.Contract(contractAddress, contractABI, signer);
             walletInfo.classList.remove('hidden');
             connectButton.style.display = 'none';
             gameResult.classList.add('hidden');
             disconnectMessage.classList.add('hidden');
             await updateUserInfo();
         } else {
-            provider = null;
+            // Reset state when account disconnected
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            contract = new ethers.Contract(contractAddress, contractABI, provider);
             signer = null;
             userAddress = null;
-            contract = null;
+            
+            // Update UI
             walletInfo.classList.add('hidden');
             connectButton.style.display = 'block';
             gameResult.classList.add('hidden');
